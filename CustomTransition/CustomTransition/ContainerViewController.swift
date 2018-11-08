@@ -33,11 +33,14 @@ class ContainerViewController: UIViewController {
     
     private var viewControllers: [UIViewController] = [UIViewController]()
     
-    private var presentingVC: UIViewController! 
+    private var presentingVC: UIViewController!
+    
+    private var cornerLayer: CALayer = {
+        let subLayer = CALayer()
+        return subLayer
+    }()
     
     @objc var navigation: UINavigationController?
-    
-    @objc var otherGestureEnabled: Bool = false  //解决手势冲突
     
     private var direction: PanDirection = .none
     weak private var rootVc: UIViewController!
@@ -96,7 +99,6 @@ class ContainerViewController: UIViewController {
         self.presentingVC = presentingVC
         self.rootVc = rootVC
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRec(pan:)))
-        panGesture.delegate = self
         self.view.addGestureRecognizer(panGesture!)
         
     }
@@ -107,8 +109,9 @@ class ContainerViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        
+        //设置跟控制器view topleft  topright圆角
         let bezier = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.frame.height), byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
-
         let maskLayer = CAShapeLayer()
         maskLayer.path = bezier.cgPath
         rootVc.view.layer.mask = maskLayer
@@ -125,24 +128,7 @@ class ContainerViewController: UIViewController {
         
         addMaskView()
         
-//        makeCorner(with: self.view)
-        
-//        self.view.clipsToBounds = true
-////
-//        rootVc.view.clipsToBounds = true
-        
-//        self.view.layer.maskedCorners = [.layerMinXMinYCorner,.layerMaxXMinYCorner]
-        
-//        let shadowLayer = CALayer()
-//        shadowLayer.backgroundColor = rootVc.view.backgroundColor!.cgColor
-//        shadowLayer.cornerRadius = 17
-//        shadowLayer.frame = self.view.bounds
-//        shadowLayer.shadowOffset = CGSize(width: -3, height: -3)
-//        shadowLayer.shadowColor = UIColor.black.cgColor
-//        shadowLayer.shadowOpacity = 0.3
-//        self.view.layer.addSublayer(shadowLayer)
-        
-        
+        //设置容器view 阴影
         self.view.layer.shadowOffset = CGSize(width: -3, height: -3)
         self.view.layer.shadowColor = UIColor.black.cgColor
         self.view.layer.shadowOpacity = 0.3
@@ -157,12 +143,12 @@ class ContainerViewController: UIViewController {
         
         switch pan.state {
         case .began:
-            
+            direction = self.commitTranslation(point: point)
             dragBegin()
             
         case .changed:
             
-            direction = self.commitTranslation(point: point)
+            
             dragging(transform: point)
             
         case .ended, .cancelled, .failed, .possible:
@@ -185,20 +171,19 @@ class ContainerViewController: UIViewController {
     
     }
     
-    ///设置topleft topright Corner
-    private func makeCorner(with view: UIView) {
-        
+    ///设置topleft topright Corner（转场控制器view）
+    private func makeSubViewCorner(view: UIView) {
+
         let bezier = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.frame.height), byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
 
         let maskLayer = CAShapeLayer()
         maskLayer.path = bezier.cgPath
-        view.layer.mask = maskLayer
-
-//        let cornerLayer = CALayer()
-//        cornerLayer.frame = view.bounds
-//        cornerLayer.mask = maskLayer
-//        view.layer.addSublayer(cornerLayer)
         
+        cornerLayer.frame = view.bounds
+        cornerLayer.backgroundColor = view.backgroundColor?.cgColor
+        cornerLayer.mask = maskLayer
+        view.layer.insertSublayer(cornerLayer, at: 0)
+        view.backgroundColor = nil
     }
     
     private func add(_ childVC: UIViewController) {
@@ -359,21 +344,24 @@ extension ContainerViewController {
     }
     
     private func dragBegin() {
-        
-        guard viewControllers.count >= 2 else {
+
+        guard isRootVc == false else {  //跟控制器直接dismiss
             return
         }
         
-        self.otherGestureEnabled = false
+        guard direction == .horizontal else {
+            return
+        }
         
         rootVc.view.insertSubview(subMaskView, belowSubview: transformView)
-        makeCorner(with: transformView)
         
-//        let v = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.height))
-//        transformView.layer.shadowOffset = CGSize(width: -30, height: -3)
-//        transformView.layer.shadowColor = UIColor.black.cgColor
-//        transformView.layer.shadowOpacity = 0.8
-//        transformView.addSubview(v)
+        //设置即将退场view Corner
+        makeSubViewCorner(view: transformView)
+        
+        //设置即将退场view阴影
+        transformView.layer.shadowOffset = CGSize(width: -3, height: 0)
+        transformView.layer.shadowColor = UIColor.black.cgColor
+        transformView.layer.shadowOpacity = 0.3
         
     }
     
@@ -442,8 +430,15 @@ extension ContainerViewController {
                     self.changeMaskViewAlpha(alpha: maskViewAlpha)
                     
                 }) { (complete) in
-                    self.otherGestureEnabled = true
-                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "otherGesture"), object: nil)
+
+                    guard self.isRootVc == false else {
+                        return
+                    }
+
+                    self.subMaskView.removeFromSuperview()
+                    self.transformView.backgroundColor = UIColor.init(cgColor: self.cornerLayer.backgroundColor ?? UIColor.white.cgColor)
+                    self.cornerLayer.removeFromSuperlayer()
+                    
                 }
                 
             }else {
@@ -479,8 +474,7 @@ extension ContainerViewController {
                     self.maskView1.alpha = maskViewAlpha
                     
                 }) { (complete) in
-                    self.otherGestureEnabled = true
-                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "otherGesture"), object: nil)
+
                 }
                 
             }else {
@@ -514,6 +508,9 @@ extension ContainerViewController {
             self.maskView1.alpha = abs(alpha)
             
         }else {
+            guard let _ = self.subMaskView.superview else {
+                return
+            }
             self.subMaskView.alpha = abs(alpha)
         }
         
@@ -585,23 +582,3 @@ extension UIViewController {
     
 }
 
-extension ContainerViewController: UIGestureRecognizerDelegate {
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//
-//        if (gestureRecognizer === self.panGesture) {
-//            return true
-//        }else if gestureRecognizer.view is UIScrollView {
-//            return true
-//        }
-//        return false
-//    }
-    
-//    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        return true
-//    }
-    
-//    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        return true
-//    }
-    
-}

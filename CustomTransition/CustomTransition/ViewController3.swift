@@ -10,6 +10,10 @@ import UIKit
 
 class ViewController3: UIViewController {
 
+    deinit {
+        print("ViewController3 deinit......")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
