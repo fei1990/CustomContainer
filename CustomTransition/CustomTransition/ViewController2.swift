@@ -18,8 +18,8 @@ class ViewController2: UIViewController {
         let t = CustomTableView(frame: CGRect(x: 0, y: 40, width: self.view.bounds.width, height: self.view.bounds.height - 40), style: .plain)
         t.delegate = (self as UITableViewDelegate)
         t.dataSource = (self as UITableViewDataSource)
-        t.bounces = false
-        
+//        t.bounces = false
+//        t.isScrollEnabled = false
         return t
     }()
     
@@ -34,22 +34,22 @@ class ViewController2: UIViewController {
         btn.setTitle("button", for: .normal)
         btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
         self.view.addSubview(btn)
-        
-//        self.view.addSubview(self.table)
+//        self.table.bounces = true
+        self.view.addSubview(self.table)
        
 //        self.table.panGestureRecognizer.delegate = (self as UIGestureRecognizerDelegate)
-        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+        
 //        self.table.panGestureRecognizer.isEnabled = false
 //        self.table.addObserver(self, forKeyPath: "panGestureRecognizer.state", options: .new, context: nil)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(notification), name: NSNotification.Name("otherGesture"), object: nil)
-        self.table.contentOffset.y = 0.5
+//        NotificationCenter.default.addObserver(self, selector: #selector(notification), name: NSNotification.Name("otherGesture"), object: nil)
+//        self.table.contentOffset.y = 0.5
     }
     
-    @objc func notification() {
-        self.table.isScrollEnabled = true
-        self.table.contentOffset.y = 0.1
-    }
+//    @objc func notification() {
+//        self.table.isScrollEnabled = true
+//        self.table.contentOffset.y = 0.1
+//    }
 
     @IBAction func btnAction(_ sender: Any) {
         
@@ -108,23 +108,41 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        
+        let vc3 = ViewController3()
+        self.containerVC.push(viewController: vc3)
         
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-        if scrollView.contentOffset.y == 0 {
-            scrollView.isScrollEnabled = false
+        print(scrollView.isDragging)
+        if scrollView.contentOffset.y <= 0 {
+            if scrollView.isDragging {
+                scrollView.isScrollEnabled = false
+//                self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+            }else {
+                scrollView.isScrollEnabled = true
+            }
+
         }else {
             scrollView.isScrollEnabled = true
         }
-        
+        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+   
     }
+
     
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        print(scrollView.contentOffset.y)
-        
+//    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+//        print(scrollView.contentOffset.y)
+//        if scrollView.contentOffset.y <= 0 {
+//            scrollView.isScrollEnabled = false
+//            self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+//        }else {
+//            scrollView.isScrollEnabled = true
+////            self.table.panGestureRecognizer.require(toFail: self.containerVC.panGesture)
+//        }
+//    }
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        scrollView.isScrollEnabled = true
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.next?.touchesMoved(touches, with: event)

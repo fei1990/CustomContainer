@@ -18,8 +18,18 @@ class ViewController3: UIViewController {
         super.viewDidLoad()
 
         self.view.backgroundColor = UIColor.white
+        
+        let btn = UIButton(type: .custom)
+        btn.frame = CGRect(x: 100, y: 100, width: 100, height: 40)
+        btn.setTitle("button", for: .normal)
+        btn.setTitleColor(UIColor.red, for: .normal)
+        btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
+        self.view.addSubview(btn)
     }
     
+    @IBAction func btnAction(_ sender: Any) {
+        
+    }
 
     /*
     // MARK: - Navigation

@@ -99,6 +99,7 @@ class ContainerViewController: UIViewController {
         self.presentingVC = presentingVC
         self.rootVc = rootVC
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRec(pan:)))
+        panGesture.delegate = self
         self.view.addGestureRecognizer(panGesture!)
         
     }
@@ -582,3 +583,29 @@ extension UIViewController {
     
 }
 
+extension ContainerViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        
+        return true
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        print("gestureRecognizer : \(gestureRecognizer)")
+//        print("otherGestureRecognizer == \(otherGestureRecognizer)")
+//        guard let _ = otherGestureRecognizer as? UIGestureRecognizer else {
+//            return true
+//        }
+        gestureRecognizer.isEnabled = true
+        otherGestureRecognizer.isEnabled = true
+        gestureRecognizer.require(toFail: otherGestureRecognizer)
+        return true
+    }
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+////        gestureRecognizer.isEnabled = true
+//        return false
+//    }
+//    
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        return true
+//    }
+}
