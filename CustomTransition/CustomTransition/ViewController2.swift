@@ -18,8 +18,6 @@ class ViewController2: UIViewController {
         let t = CustomTableView(frame: CGRect(x: 0, y: 40, width: self.view.bounds.width, height: self.view.bounds.height - 40), style: .plain)
         t.delegate = (self as UITableViewDelegate)
         t.dataSource = (self as UITableViewDataSource)
-//        t.bounces = false
-//        t.isScrollEnabled = false
         return t
     }()
     
@@ -34,10 +32,9 @@ class ViewController2: UIViewController {
         btn.setTitle("button", for: .normal)
         btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
         self.view.addSubview(btn)
-//        self.table.bounces = true
         self.view.addSubview(self.table)
-       
-        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+       self.table.vc = self
+//        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
     }
     
     @IBAction func btnAction(_ sender: Any) {
@@ -86,7 +83,7 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        print(scrollView.isDragging)
+//        print(scrollView.isDragging)
         if scrollView.contentOffset.y <= 0 {
             if scrollView.isDragging {
                 scrollView.isScrollEnabled = false
@@ -122,7 +119,7 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
 
 class CustomTableView: UITableView, UIGestureRecognizerDelegate {
     
-//    weak var vc: ViewController2?
+    weak var vc: ViewController2?
 //
 //    var isScroll: Bool = true
 //
@@ -178,8 +175,41 @@ class CustomTableView: UITableView, UIGestureRecognizerDelegate {
 //
 //    }
     
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        print("gestureRecognizer : \(gestureRecognizer)")
+//        print("otherGestureRecognizer : \(otherGestureRecognizer)")
+//        if otherGestureRecognizer == vc?.containerVC.panGesture {
+//            return true
+//        }
+//        return false
+//    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        if let _ = otherGestureRecognizer as? UIPanGestureRecognizer, let _ = gestureRecognizer.view as? UIScrollView {
+//            return true
+//        }
+        return false
+    }
+    
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
+//        print("gestureRecognizer : \(gestureRecognizer)")
+//        print("otherGestureRecognizer : \(otherGestureRecognizer)")
+        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
+            let point = pan.translation(in: self)
+            
+            if abs(point.x) >= abs(point.y) {   //水平滑
+//                gestureRecognizer.require(toFail: pan)
+//                self.panGestureRecognizer.state = .failed
+//                pan.require(toFail: gestureRecognizer)
+                return true
+            }else {  //垂直滑
+                pan.require(toFail: self.panGestureRecognizer)
+                return false
+            }
+            
+            print(point)
+        }
+        return false
     }
     
 }
