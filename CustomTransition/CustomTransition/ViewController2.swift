@@ -37,43 +37,15 @@ class ViewController2: UIViewController {
 //        self.table.bounces = true
         self.view.addSubview(self.table)
        
-//        self.table.panGestureRecognizer.delegate = (self as UIGestureRecognizerDelegate)
-        
-//        self.table.panGestureRecognizer.isEnabled = false
-//        self.table.addObserver(self, forKeyPath: "panGestureRecognizer.state", options: .new, context: nil)
-        
-//        NotificationCenter.default.addObserver(self, selector: #selector(notification), name: NSNotification.Name("otherGesture"), object: nil)
-//        self.table.contentOffset.y = 0.5
+        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
     }
     
-//    @objc func notification() {
-//        self.table.isScrollEnabled = true
-//        self.table.contentOffset.y = 0.1
-//    }
-
     @IBAction func btnAction(_ sender: Any) {
         
         let vc3 = ViewController3()
         self.containerVC.push(viewController: vc3)
-//        self.containerVC.navigation?.pushViewController(vc3, animated: true)
-//
-//        let vc4 = ViewController4()
-//
-//        self.containerVC.push(viewController: vc4)
-        
         
     }
-    
-//    override func viewWillDisappear(_ animated: Bool) {
-//        super.viewWillDisappear(animated)
-//        self.containerVC.topMaskView.isHidden = true
-//    }
-//
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//        self.containerVC.topMaskView.isHidden = false
-//    }
-
     
     
 }
@@ -118,7 +90,6 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
         if scrollView.contentOffset.y <= 0 {
             if scrollView.isDragging {
                 scrollView.isScrollEnabled = false
-//                self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
             }else {
                 scrollView.isScrollEnabled = true
             }
@@ -126,7 +97,6 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
         }else {
             scrollView.isScrollEnabled = true
         }
-        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
    
     }
 
@@ -150,7 +120,7 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
 }
 
 
-class CustomTableView: UITableView {
+class CustomTableView: UITableView, UIGestureRecognizerDelegate {
     
 //    weak var vc: ViewController2?
 //
@@ -208,5 +178,8 @@ class CustomTableView: UITableView {
 //
 //    }
     
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
     
 }
