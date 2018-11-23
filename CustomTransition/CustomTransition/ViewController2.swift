@@ -33,8 +33,8 @@ class ViewController2: UIViewController {
         btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
         self.view.addSubview(btn)
         self.view.addSubview(self.table)
-       self.table.vc = self
-//        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+        self.table.vc = self
+        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
     }
     
     @IBAction func btnAction(_ sender: Any) {
@@ -83,7 +83,7 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//        print(scrollView.isDragging)
+
         if scrollView.contentOffset.y <= 0 {
             if scrollView.isDragging {
                 scrollView.isScrollEnabled = false
@@ -138,12 +138,24 @@ class CustomTableView: UITableView, UIGestureRecognizerDelegate {
 //        fatalError("init(coder:) has not been implemented")
 //    }
 //
-//    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-//
-//
-//
-//        return isScrollEnabled
-//    }
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        
+        if let pan = gestureRecognizer as? UIPanGestureRecognizer {
+
+            let point = pan.translation(in: self)
+
+            if abs(point.x) > abs(point.y) {   //水平滑
+
+                return false
+            }else {  //垂直滑
+
+                return true
+            }
+
+        }
+        
+        return true
+    }
 ////
 //    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
 //
@@ -185,31 +197,46 @@ class CustomTableView: UITableView, UIGestureRecognizerDelegate {
 //    }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        if let _ = otherGestureRecognizer as? UIPanGestureRecognizer, let _ = gestureRecognizer.view as? UIScrollView {
-//            return true
-//        }
+
+        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
+
+            let point = pan.translation(in: self)
+
+            if abs(point.x) >= abs(point.y) { //水平滑
+                return true
+            }
+
+//            if abs(point.x) < abs(point.y) {
+//                return false
+//            }
+
+        }
+
+        if let _ = otherGestureRecognizer.view as? UIWindow {
+            return true
+        }
+
+
         return false
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
 //        print("gestureRecognizer : \(gestureRecognizer)")
 //        print("otherGestureRecognizer : \(otherGestureRecognizer)")
-        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
-            let point = pan.translation(in: self)
-            
-            if abs(point.x) >= abs(point.y) {   //水平滑
-//                gestureRecognizer.require(toFail: pan)
-//                self.panGestureRecognizer.state = .failed
-//                pan.require(toFail: gestureRecognizer)
-                return true
-            }else {  //垂直滑
-                pan.require(toFail: self.panGestureRecognizer)
-                return false
-            }
-            
-            print(point)
-        }
-        return false
+//        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
+//            let point = pan.translation(in: self)
+//
+//            if abs(point.x) > abs(point.y) {   //水平滑
+//                pan.require(toFail: self.panGestureRecognizer)
+//                return true
+//            }else {  //垂直滑
+//                pan.require(toFail: self.panGestureRecognizer)
+//                return false
+//            }
+//
+//            print(point)
+//        }
+        return true
     }
-    
+ 
 }
