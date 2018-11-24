@@ -12,6 +12,7 @@ class ViewController2: UIViewController {
 
     deinit {
         print("ViewController2 deinit......")
+        NotificationCenter.default.removeObserver(self)
     }
     
     lazy var table: CustomTableView = {
@@ -33,8 +34,7 @@ class ViewController2: UIViewController {
         btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
         self.view.addSubview(btn)
         self.view.addSubview(self.table)
-        self.table.vc = self
-        self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
+        
     }
     
     @IBAction func btnAction(_ sender: Any) {
@@ -44,12 +44,6 @@ class ViewController2: UIViewController {
         
     }
     
-    
-}
-
-extension ViewController2: UIGestureRecognizerDelegate {
-    
-   
 }
 
 extension ViewController2: UITableViewDataSource, UITableViewDelegate {
@@ -97,146 +91,19 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
    
     }
 
-    
-//    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-//        print(scrollView.contentOffset.y)
-//        if scrollView.contentOffset.y <= 0 {
-//            scrollView.isScrollEnabled = false
-//            self.containerVC.panGesture.require(toFail: self.table.panGestureRecognizer)
-//        }else {
-//            scrollView.isScrollEnabled = true
-////            self.table.panGestureRecognizer.require(toFail: self.containerVC.panGesture)
-//        }
-//    }
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        scrollView.isScrollEnabled = true
-    }
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.next?.touchesMoved(touches, with: event)
-    }
 }
 
 
 class CustomTableView: UITableView, UIGestureRecognizerDelegate {
     
-    weak var vc: ViewController2?
-//
-//    var isScroll: Bool = true
-//
-//    var offsetY: CGFloat?
-//
-//    var pan: UIPanGestureRecognizer!
-//
-//    override init(frame: CGRect, style: UITableView.Style) {
-//        super.init(frame: frame, style: style)
-//
-//
-//
-//    }
-//
-//    required init?(coder aDecoder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//
-    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         
-        if let pan = gestureRecognizer as? UIPanGestureRecognizer {
-
-            let point = pan.translation(in: self)
-
-            if abs(point.x) > abs(point.y) {   //水平滑
-
-                return false
-            }else {  //垂直滑
-
-                return true
-            }
-
-        }
+        self.isScrollEnabled = true
         
-        return true
-    }
-////
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//
-//        print(gestureRecognizer.view as Any)
-//
-//        return true
-//    }
-//
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//
-//        if otherGestureRecognizer.view is UIScrollView {
-//            return true
-//        }
-//
-//        return true
-//    }
-//
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-//        return true
-//    }
-    
-//    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-//
-//        if self.vc?.containerVC.otherGestureEnabled == false || isScroll {
-//            return nil
-//        }else {
-//            return super.hitTest(point, with: event)
-//        }
-//
-//    }
-    
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        print("gestureRecognizer : \(gestureRecognizer)")
-//        print("otherGestureRecognizer : \(otherGestureRecognizer)")
-//        if otherGestureRecognizer == vc?.containerVC.panGesture {
-//            return true
-//        }
-//        return false
-//    }
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-
-        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
-
-            let point = pan.translation(in: self)
-
-            if abs(point.x) >= abs(point.y) { //水平滑
-                return true
-            }
-
-//            if abs(point.x) < abs(point.y) {
-//                return false
-//            }
-
-        }
-
-        if let _ = otherGestureRecognizer.view as? UIWindow {
+        if self.contentOffset.y <= 0 {
             return true
         }
-
-
         return false
-    }
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        print("gestureRecognizer : \(gestureRecognizer)")
-//        print("otherGestureRecognizer : \(otherGestureRecognizer)")
-//        if let pan = otherGestureRecognizer as? UIPanGestureRecognizer {
-//            let point = pan.translation(in: self)
-//
-//            if abs(point.x) > abs(point.y) {   //水平滑
-//                pan.require(toFail: self.panGestureRecognizer)
-//                return true
-//            }else {  //垂直滑
-//                pan.require(toFail: self.panGestureRecognizer)
-//                return false
-//            }
-//
-//            print(point)
-//        }
-        return true
     }
  
 }

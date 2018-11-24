@@ -149,7 +149,6 @@ class ContainerViewController: UIViewController {
             
         case .changed:
             
-            
             dragging(transform: point)
             
         case .ended, .cancelled, .failed, .possible:
