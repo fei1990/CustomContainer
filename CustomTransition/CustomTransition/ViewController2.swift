@@ -90,6 +90,11 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
         }
    
     }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        scrollView.isScrollEnabled = true
+    }
+    
 
 }
 
@@ -97,8 +102,6 @@ extension ViewController2: UITableViewDataSource, UITableViewDelegate {
 class CustomTableView: UITableView, UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        
-        self.isScrollEnabled = true
         
         if self.contentOffset.y <= 0 {
             return true
