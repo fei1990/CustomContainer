@@ -16,7 +16,7 @@ class ViewController2: UIViewController {
     }
     
     lazy var table: CustomTableView = {
-        let t = CustomTableView(frame: CGRect(x: 0, y: 40, width: self.view.bounds.width, height: self.view.bounds.height - 40), style: .plain)
+        let t = CustomTableView(frame: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.bounds.height - 88), style: .plain)
         t.delegate = (self as UITableViewDelegate)
         t.dataSource = (self as UITableViewDataSource)
         return t
@@ -26,7 +26,7 @@ class ViewController2: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = UIColor.cyan
+        view.backgroundColor = UIColor.white
         
         let btn = UIButton(type: .custom)
         btn.frame = CGRect(x: 100, y: 100, width: 100, height: 40)

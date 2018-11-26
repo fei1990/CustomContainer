@@ -28,7 +28,8 @@ class ViewController3: UIViewController {
     }
     
     @IBAction func btnAction(_ sender: Any) {
-        
+        let vc = ViewController4()
+        self.containerVC.push(viewController: vc, completion: nil)
     }
 
     /*

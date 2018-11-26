@@ -15,6 +15,8 @@ let maskViewAlpha: CGFloat =  0.3
 
 let animationDuration: TimeInterval = 0.3
 
+let radius: CGFloat = 16
+
 fileprivate enum AnimateType {
     case push
     case present
@@ -34,11 +36,6 @@ class ContainerViewController: UIViewController {
     private var viewControllers: [UIViewController] = [UIViewController]()
     
     private var presentingVC: UIViewController!
-    
-    private var cornerLayer: CALayer = {
-        let subLayer = CALayer()
-        return subLayer
-    }()
     
     @objc var navigation: UINavigationController?
     
@@ -90,6 +87,23 @@ class ContainerViewController: UIViewController {
         return mView
     }()
     
+    /// 开始退场view 左边阴影
+    lazy var shadowView: UIView = {
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y))
+        v.layer.shadowOffset = CGSize(width: -3, height: 0)
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.3
+        let bezier = UIBezierPath()
+        bezier.move(to: CGPoint(x: UIScreen.main.bounds.width, y: 0))
+        bezier.addLine(to: CGPoint(x: UIScreen.main.bounds.width, y: UIScreen.main.bounds.height))
+        bezier.addLine(to: CGPoint(x: 0, y: UIScreen.main.bounds.height))
+        bezier.addLine(to: CGPoint(x: 0, y: radius))
+        bezier.addArc(withCenter: CGPoint(x: radius, y: radius), radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
+        bezier.close()
+        v.layer.shadowPath = bezier.cgPath
+        return v
+    }()
+    
     var panGesture: UIPanGestureRecognizer!
     
     //MARK: lifecycle
@@ -112,10 +126,7 @@ class ContainerViewController: UIViewController {
         super.viewDidLayoutSubviews()
         
         //设置跟控制器view topleft  topright圆角
-        let bezier = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.frame.height), byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
-        let maskLayer = CAShapeLayer()
-        maskLayer.path = bezier.cgPath
-        rootVc.view.layer.mask = maskLayer
+        makeSubViewCorner(view: rootVc.view)
     }
     
     override func viewDidLoad() {
@@ -164,8 +175,12 @@ class ContainerViewController: UIViewController {
         
         topMaskView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: view_y)
         
-        presentingVC.navigationController?.view.addSubview(topMaskView)
-        
+        if  let na = presentingVC.navigationController {
+            na.view.addSubview(topMaskView)
+        }else {
+            presentingVC.view.addSubview(topMaskView)
+        }
+
         maskView1.frame = CGRect(x: 0, y: view_y, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y)
         presentingVC.view.insertSubview(maskView1, belowSubview: self.view)
     
@@ -174,16 +189,12 @@ class ContainerViewController: UIViewController {
     ///设置topleft topright Corner（转场控制器view）
     private func makeSubViewCorner(view: UIView) {
 
-        let bezier = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.frame.height), byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
+        let bezier = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.frame.height), byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: radius, height: radius))
 
         let maskLayer = CAShapeLayer()
         maskLayer.path = bezier.cgPath
-        
-        cornerLayer.frame = view.bounds
-        cornerLayer.backgroundColor = view.backgroundColor?.cgColor
-        cornerLayer.mask = maskLayer
-        view.layer.insertSublayer(cornerLayer, at: 0)
-        view.backgroundColor = nil
+        view.layer.mask = maskLayer
+
     }
     
     private func add(_ childVC: UIViewController) {
@@ -205,9 +216,7 @@ class ContainerViewController: UIViewController {
             
             rootVc.view.addSubview(childVC.view)
         }
-        
-        
-        
+
     }
     
     private func pushAnimate(in childView: UIView, completion: (() -> Void)?) {
@@ -357,11 +366,8 @@ extension ContainerViewController {
         
         //设置即将退场view Corner
         makeSubViewCorner(view: transformView)
-        
-        //设置即将退场view阴影
-        transformView.layer.shadowOffset = CGSize(width: -3, height: 0)
-        transformView.layer.shadowColor = UIColor.black.cgColor
-        transformView.layer.shadowOpacity = 0.3
+        //设置即将退场 view 阴影
+        rootVc.view.insertSubview(shadowView, belowSubview: transformView)
         
     }
     
@@ -377,9 +383,10 @@ extension ContainerViewController {
             
             if offsetX > 0 {  //让这个view都跟着动
                 transformView.transform = CGAffineTransform(translationX: offsetX, y: 0)
-                panGesture.setTranslation(CGPoint(x: offsetX, y: 0), in: transformView)
+                shadowView.transform = CGAffineTransform(translationX: offsetX, y: 0)
             }else {
                 transformView.transform = CGAffineTransform.identity
+                shadowView.transform = CGAffineTransform.identity
             }
             
             // 让遮盖透明度改变,直到减为0,让遮罩完全透明,默认值-当前滑动比例*默认值
@@ -396,7 +403,6 @@ extension ContainerViewController {
             
             if offsetY > 0 {
                 self.view.transform = CGAffineTransform(translationX: 0, y: offsetY)
-                panGesture.setTranslation(CGPoint(x: 0, y: offsetY), in: self.view)
             }else {
                 self.view.transform = CGAffineTransform.identity
             }
@@ -425,7 +431,7 @@ extension ContainerViewController {
                 UIView.animate(withDuration: animationDuration, animations: {
                     
                     self.transformView.transform = CGAffineTransform.identity
-                    
+                    self.shadowView.transform = CGAffineTransform.identity
                     //遮罩alpha也要归位
                     self.changeMaskViewAlpha(alpha: maskViewAlpha)
                     
@@ -436,16 +442,21 @@ extension ContainerViewController {
                     }
 
                     self.subMaskView.removeFromSuperview()
-                    self.transformView.backgroundColor = UIColor.init(cgColor: self.cornerLayer.backgroundColor ?? UIColor.white.cgColor)
-                    self.cornerLayer.removeFromSuperlayer()
                     
+                    if let _ = self.transformView.layer.mask {
+                        self.transformView.layer.mask = nil
+                    }
+                    
+                    if let _ = self.shadowView.superview {
+                        self.shadowView.removeFromSuperview()
+                    }
                 }
                 
             }else {
                 UIView.animate(withDuration: animationDuration, animations: {
                     
                     self.transformView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
-                    
+                    self.shadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
                     self.changeMaskViewAlpha(alpha: 0)
                     
                 }) { (completion) in
@@ -453,7 +464,9 @@ extension ContainerViewController {
                     self.removeMaskView()
                     self.removeCurrentVc()
                     self.changeMaskViewAlpha(alpha: maskViewAlpha)
-                    
+                    if let _ = self.shadowView.superview {
+                        self.shadowView.removeFromSuperview()
+                    }
                 }
             }
             

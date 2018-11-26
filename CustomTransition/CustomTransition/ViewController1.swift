@@ -27,13 +27,18 @@ class ViewController1: UIViewController {
         
         
         let shadowView = UIView(frame: CGRect(x: 200, y: 10, width: 150, height: 150))
-        shadowView.backgroundColor = UIColor.blue
+//        shadowView.backgroundColor = UIColor.blue
         shadowView.layer.shadowColor = UIColor.black.cgColor
         shadowView.layer.shadowOffset = CGSize(width: -3, height: -3)
         shadowView.layer.shadowOpacity = 0.6
+        shadowView.layer.shadowPath = UIBezierPath(rect: shadowView.bounds).cgPath
 //        shadowView.layer.shadowRadius = 8
         
+        let v = UIView(frame: CGRect(x: 200, y: 10, width: 150, height: 150))
+        v.backgroundColor = UIColor.blue
+        
         self.view.addSubview(shadowView)
+        self.view.addSubview(v)
         
     }
     
