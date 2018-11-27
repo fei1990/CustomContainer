@@ -25,6 +25,13 @@ class ViewController3: UIViewController {
         btn.setTitleColor(UIColor.red, for: .normal)
         btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
         self.view.addSubview(btn)
+        
+        
+        let backBtn = UIButton(type: .custom)
+        backBtn.frame = CGRect(x: 20, y: 20, width: 32, height: 32)
+        backBtn.setBackgroundImage(UIImage(named: "ic_back_black_normal"), for: .normal)
+        backBtn.addTarget(self, action: #selector(backAction(_:)), for: .touchUpInside)
+        self.view.addSubview(backBtn)
     }
     
     @IBAction func btnAction(_ sender: Any) {
@@ -32,14 +39,10 @@ class ViewController3: UIViewController {
         self.containerVC.push(viewController: vc, completion: nil)
     }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    @objc func backAction(_ sender: Any) {
+        
+        self.containerVC.pop()
+        
     }
-    */
 
 }

@@ -7,6 +7,7 @@
 //
 
 #import "ViewController5.h"
+#import "CustomTransition-Swift.h"
 
 @interface ViewController5 ()
 
@@ -19,6 +20,16 @@
     
     self.view.backgroundColor = [UIColor orangeColor];
     
+    UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [closeBtn setBackgroundImage:[UIImage imageNamed:@"ic_close_black_normal"] forState:UIControlStateNormal];
+    [closeBtn setFrame:CGRectMake(20, 20, 32, 32)];
+    [closeBtn addTarget:self action:@selector(closeAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:closeBtn];
+    
+}
+
+- (void)closeAction:(UIButton *)btn {
+    [self.containerVC dismiss:nil];
 }
 
 /*

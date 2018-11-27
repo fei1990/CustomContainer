@@ -79,6 +79,7 @@ class ContainerViewController: UIViewController {
         return mView
     }()
     
+    /// 每一个child view 的背景遮罩
     private lazy var subMaskView: UIControl = {
         let mView = UIControl.init(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y))
         mView.backgroundColor = UIColor.black
@@ -302,7 +303,44 @@ class ContainerViewController: UIViewController {
         
     }
     
-    //MARK: 出场方法
+    private func popAnimation(_ completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: animationDuration, animations: {
+            
+            self.transformView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
+            self.shadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
+            self.changeMaskViewAlpha(alpha: 0)
+            
+        }) { (completed) in
+            
+            self.removeMaskView()
+            self.removeCurrentVc()
+            self.changeMaskViewAlpha(alpha: maskViewAlpha)
+            if let _ = self.shadowView.superview {
+                self.shadowView.transform = CGAffineTransform.identity
+                self.shadowView.removeFromSuperview()
+            }
+            
+            completion?()
+            
+        }
+    }
+    
+    private func dismissAnimation(_ completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: animationDuration, animations: {
+            
+            self.view.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
+            
+            self.topMaskView.alpha = 0
+            self.maskView1.alpha = 0
+            
+        }) { (completed) in
+            
+            self.removeAll()
+            completion?()
+        }
+    }
+    
+    //MARK: 进场方法
     @objc func push(viewController: UIViewController, completion: (() -> Void)? = nil) {
         
         viewController.containerVC = self
@@ -335,6 +373,17 @@ class ContainerViewController: UIViewController {
         
     }
     
+    ///MARK: 出场方法
+    @objc func pop(_ completion: (() -> Void)? = nil) {
+        
+        dragBeginSettings()
+        popAnimation(completion)
+    }
+    
+    @objc func dismiss(_ completion: (() -> Void)? = nil) {
+        dismissAnimation(completion)
+    }
+    
 }
 
 extension ContainerViewController {
@@ -352,6 +401,16 @@ extension ContainerViewController {
         
     }
     
+    /// 拖动开始前的设置
+    private func dragBeginSettings() {
+        //添加即将出场view 背景遮罩
+        rootVc.view.insertSubview(subMaskView, belowSubview: transformView)
+        //设置即将退场view Corner
+        makeSubViewCorner(view: transformView)
+        //设置即将退场 view 阴影
+        rootVc.view.insertSubview(shadowView, belowSubview: transformView)
+    }
+    
     private func dragBegin() {
 
         guard isRootVc == false else {  //跟控制器直接dismiss
@@ -362,12 +421,7 @@ extension ContainerViewController {
             return
         }
         
-        rootVc.view.insertSubview(subMaskView, belowSubview: transformView)
-        
-        //设置即将退场view Corner
-        makeSubViewCorner(view: transformView)
-        //设置即将退场 view 阴影
-        rootVc.view.insertSubview(shadowView, belowSubview: transformView)
+        dragBeginSettings()
         
     }
     
@@ -453,21 +507,7 @@ extension ContainerViewController {
                 }
                 
             }else {
-                UIView.animate(withDuration: animationDuration, animations: {
-                    
-                    self.transformView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
-                    self.shadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
-                    self.changeMaskViewAlpha(alpha: 0)
-                    
-                }) { (completion) in
-                    
-                    self.removeMaskView()
-                    self.removeCurrentVc()
-                    self.changeMaskViewAlpha(alpha: maskViewAlpha)
-                    if let _ = self.shadowView.superview {
-                        self.shadowView.removeFromSuperview()
-                    }
-                }
+                popAnimation()
             }
             
         case .vertical:
@@ -491,18 +531,7 @@ extension ContainerViewController {
                 }
                 
             }else {
-                UIView.animate(withDuration: animationDuration, animations: {
-                    
-                    self.view.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
-                    
-                    self.topMaskView.alpha = 0
-                    self.maskView1.alpha = 0
-                    
-                }) { (completion) in
-                    
-                    self.removeAll()
-                    
-                }
+                dismissAnimation()
             }
             
         case .none:

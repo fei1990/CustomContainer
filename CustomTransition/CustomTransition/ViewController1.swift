@@ -40,6 +40,12 @@ class ViewController1: UIViewController {
         self.view.addSubview(shadowView)
         self.view.addSubview(v)
         
+        
+        let closeBtn = UIButton(type: .custom)
+        closeBtn.frame = CGRect(x: 20, y: 20, width: 32, height: 32)
+        closeBtn.setBackgroundImage(UIImage(named: "ic_close_black_normal"), for: .normal)
+        closeBtn.addTarget(self, action: #selector(closeAction(_:)), for: .touchUpInside)
+        self.view.addSubview(closeBtn)
     }
     
 
@@ -49,6 +55,10 @@ class ViewController1: UIViewController {
         
         self.containerVC.push(viewController: vc2)
         
+    }
+    
+    @objc func closeAction(_ sender: Any) {
+        self.containerVC.dismiss()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
