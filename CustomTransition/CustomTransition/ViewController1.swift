@@ -58,7 +58,9 @@ class ViewController1: UIViewController {
     }
     
     @objc func closeAction(_ sender: Any) {
-        self.containerVC.dismiss()
+        self.containerVC.dismiss {
+            
+        }
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

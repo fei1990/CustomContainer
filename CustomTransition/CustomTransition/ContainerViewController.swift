@@ -96,10 +96,28 @@ class ContainerViewController: UIViewController {
         v.layer.shadowOpacity = 0.3
         let bezier = UIBezierPath()
         bezier.move(to: CGPoint(x: UIScreen.main.bounds.width, y: 0))
-        bezier.addLine(to: CGPoint(x: UIScreen.main.bounds.width, y: UIScreen.main.bounds.height))
-        bezier.addLine(to: CGPoint(x: 0, y: UIScreen.main.bounds.height))
+        bezier.addLine(to: CGPoint(x: UIScreen.main.bounds.width, y: UIScreen.main.bounds.height - view_y))
+        bezier.addLine(to: CGPoint(x: 0, y: UIScreen.main.bounds.height - view_y))
         bezier.addLine(to: CGPoint(x: 0, y: radius))
         bezier.addArc(withCenter: CGPoint(x: radius, y: radius), radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
+        bezier.close()
+        v.layer.shadowPath = bezier.cgPath
+        return v
+    }()
+    
+    ///该容器的投影
+    lazy var contaiverShadowView: UIView = {
+        let v = UIView(frame: CGRect(x: 0, y: view_y, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y))
+        v.layer.shadowOffset = CGSize(width: -3, height: -3)
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.3
+        let bezier = UIBezierPath()
+        bezier.move(to: CGPoint(x: UIScreen.main.bounds.width - radius, y: 0))
+        bezier.addArc(withCenter: CGPoint(x: UIScreen.main.bounds.width - radius, y: radius), radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
+        bezier.addLine(to: CGPoint(x: UIScreen.main.bounds.width, y: UIScreen.main.bounds.height - view_y))
+        bezier.addLine(to: CGPoint(x: 0, y: UIScreen.main.bounds.height - view_y))
+        bezier.addLine(to: CGPoint(x: 0, y: radius))
+        bezier.addArc(withCenter: CGPoint(x: radius, y: radius), radius: radius, startAngle: -.pi, endAngle: .pi * 1.5, clockwise: true)
         bezier.close()
         v.layer.shadowPath = bezier.cgPath
         return v
@@ -123,13 +141,6 @@ class ContainerViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        //设置跟控制器view topleft  topright圆角
-        makeSubViewCorner(view: rootVc.view)
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -139,13 +150,11 @@ class ContainerViewController: UIViewController {
         
         self.view.frame = CGRect(x: 0, y: view_y, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y)
         
+        //添加遮罩
         addMaskView()
         
-        //设置容器view 阴影
-        self.view.layer.shadowOffset = CGSize(width: -3, height: -3)
-        self.view.layer.shadowColor = UIColor.black.cgColor
-        self.view.layer.shadowOpacity = 0.3
-        self.view.layer.shadowRadius = 3
+        //添加圆角
+        makeSubViewCorner(view: self.view)
         
     }
     
@@ -184,7 +193,7 @@ class ContainerViewController: UIViewController {
 
         maskView1.frame = CGRect(x: 0, y: view_y, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - view_y)
         presentingVC.view.insertSubview(maskView1, belowSubview: self.view)
-    
+        
     }
     
     ///设置topleft topright Corner（转场控制器view）
@@ -200,23 +209,13 @@ class ContainerViewController: UIViewController {
     
     private func add(_ childVC: UIViewController) {
         
-        if viewControllers.count == 0 {
-            addChild(childVC)
-            
-            childVC.didMove(toParent: self)
-            
-            childVC.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: self.view.frame.height)
-            
-            self.view.addSubview(childVC.view)
-        }else {
-            rootVc.addChild(childVC)
-            
-            childVC.didMove(toParent: rootVc)
-            
-            childVC.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: self.view.frame.height)
-            
-            rootVc.view.addSubview(childVC.view)
-        }
+        addChild(childVC)
+        
+        childVC.didMove(toParent: self)
+        
+        childVC.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: self.view.frame.height)
+        
+        view.addSubview(childVC.view)
 
     }
     
@@ -235,9 +234,13 @@ class ContainerViewController: UIViewController {
             
             presentView = self.view
             
+            //添加投影
+            presentingVC.view.insertSubview(contaiverShadowView, aboveSubview: maskView1)
+            contaiverShadowView.transform = CGAffineTransform(translationX: UIScreen.main.bounds.width, y: view_y)
+            
         }else {
             
-            rootVc.view.insertSubview(subMaskView, belowSubview: childView)
+            view.insertSubview(subMaskView, belowSubview: childView)
             subMaskView.alpha = 0
             
             UIView.animate(withDuration: animationDuration, animations: {
@@ -256,6 +259,10 @@ class ContainerViewController: UIViewController {
         UIView.animate(withDuration: animationDuration, animations: {
             
             presentView.transform = CGAffineTransform(translationX: 0, y: 0)
+            
+            if self.viewControllers.count == 0 {
+                self.contaiverShadowView.transform = CGAffineTransform(translationX: 0, y: view_y)
+            }
             
         }) { (completed) in
             
@@ -276,9 +283,13 @@ class ContainerViewController: UIViewController {
                 self.maskView1.alpha = maskViewAlpha
             }
             presentView = self.view
+            
+            //添加投影
+            presentingVC.view.insertSubview(contaiverShadowView, aboveSubview: maskView1)
+            contaiverShadowView.transform = CGAffineTransform(translationX: 0, y: UIScreen.main.bounds.height - view_y)
     
         }else {
-            rootVc.view.insertSubview(subMaskView, belowSubview: childView)
+            view.insertSubview(subMaskView, belowSubview: childView)
             subMaskView.alpha = 0
             
             UIView.animate(withDuration: animationDuration, animations: {
@@ -296,6 +307,9 @@ class ContainerViewController: UIViewController {
         UIView.animate(withDuration: animationDuration, animations: {
             
             presentView.transform = CGAffineTransform(translationX: 0, y: 0)
+            if self.viewControllers.count == 0 {
+                self.contaiverShadowView.transform = CGAffineTransform(translationX: 0, y: 0)
+            }
             
         }) { (completed) in
             completion?()
@@ -307,8 +321,13 @@ class ContainerViewController: UIViewController {
         UIView.animate(withDuration: animationDuration, animations: {
             
             self.transformView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
-            self.shadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
             self.changeMaskViewAlpha(alpha: 0)
+            
+            if self.isRootVc {
+                self.contaiverShadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
+            }else {
+                self.shadowView.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
+            }
             
         }) { (completed) in
             
@@ -318,6 +337,10 @@ class ContainerViewController: UIViewController {
             if let _ = self.shadowView.superview {
                 self.shadowView.transform = CGAffineTransform.identity
                 self.shadowView.removeFromSuperview()
+            }
+            
+            if self.viewControllers.count == 0, let _ = self.contaiverShadowView.superview {
+                self.contaiverShadowView.removeFromSuperview()
             }
             
             completion?()
@@ -330,12 +353,18 @@ class ContainerViewController: UIViewController {
             
             self.view.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
             
+            self.contaiverShadowView.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
+            
             self.topMaskView.alpha = 0
             self.maskView1.alpha = 0
             
         }) { (completed) in
             
             self.removeAll()
+            if let _ = self.contaiverShadowView.superview {
+                self.contaiverShadowView.removeFromSuperview()
+            }
+            
             completion?()
         }
     }
@@ -403,12 +432,14 @@ extension ContainerViewController {
     
     /// 拖动开始前的设置
     private func dragBeginSettings() {
-        //添加即将出场view 背景遮罩
-        rootVc.view.insertSubview(subMaskView, belowSubview: transformView)
-        //设置即将退场view Corner
-        makeSubViewCorner(view: transformView)
-        //设置即将退场 view 阴影
-        rootVc.view.insertSubview(shadowView, belowSubview: transformView)
+        if !isRootVc {
+            //添加即将出场view 背景遮罩
+            view.insertSubview(subMaskView, belowSubview: transformView)
+            //设置即将退场view Corner
+            makeSubViewCorner(view: transformView)
+            //设置即将退场 view 阴影
+            view.insertSubview(shadowView, belowSubview: transformView)
+        }
     }
     
     private func dragBegin() {
@@ -438,9 +469,15 @@ extension ContainerViewController {
             if offsetX > 0 {  //让这个view都跟着动
                 transformView.transform = CGAffineTransform(translationX: offsetX, y: 0)
                 shadowView.transform = CGAffineTransform(translationX: offsetX, y: 0)
+                if isRootVc {
+                    contaiverShadowView.transform = CGAffineTransform(translationX: offsetX, y: 0)
+                }
             }else {
                 transformView.transform = CGAffineTransform.identity
                 shadowView.transform = CGAffineTransform.identity
+                if isRootVc {
+                    contaiverShadowView.transform = CGAffineTransform.identity
+                }
             }
             
             // 让遮盖透明度改变,直到减为0,让遮罩完全透明,默认值-当前滑动比例*默认值
@@ -457,8 +494,10 @@ extension ContainerViewController {
             
             if offsetY > 0 {
                 self.view.transform = CGAffineTransform(translationX: 0, y: offsetY)
+                contaiverShadowView.transform = CGAffineTransform(translationX: 0, y: offsetY)
             }else {
                 self.view.transform = CGAffineTransform.identity
+                contaiverShadowView.transform = CGAffineTransform.identity
             }
             
             if currentScaleY > 0 {
@@ -488,6 +527,10 @@ extension ContainerViewController {
                     self.shadowView.transform = CGAffineTransform.identity
                     //遮罩alpha也要归位
                     self.changeMaskViewAlpha(alpha: maskViewAlpha)
+                    
+                    if self.isRootVc {
+                        self.contaiverShadowView.transform = CGAffineTransform.identity
+                    }
                     
                 }) { (complete) in
 
@@ -526,6 +569,8 @@ extension ContainerViewController {
                     self.topMaskView.alpha = maskViewAlpha
                     self.maskView1.alpha = maskViewAlpha
                     
+                    self.contaiverShadowView.transform = CGAffineTransform.identity
+                    
                 }) { (complete) in
 
                 }
@@ -537,6 +582,7 @@ extension ContainerViewController {
         case .none:
             self.transformView.transform = CGAffineTransform.identity
             self.view.transform = CGAffineTransform.identity
+            self.contaiverShadowView.transform = CGAffineTransform.identity
         }
         
     }
